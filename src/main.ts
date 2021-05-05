@@ -13,5 +13,27 @@ async function bootstrap() {
   await app.listen(port);
   appInsights.start();
   console.log(`app listening on port ${port}`);
+
+  const closeApp = async () => {
+    try {
+      await app.close();
+      process.exit(0);
+    } catch (err) {
+      console.error(err);
+      process.exit(1);
+    }
+  };
+
+  // PM2 Graceful Exits
+  process.on('SIGINT', async () => {
+    console.info('SIGINT signal received.');
+    await closeApp();
+  });
+
+  process.on('message', async (msg) => {
+    if (msg == 'shutdown') {
+      await closeApp();
+    }
+  });
 }
 bootstrap();
